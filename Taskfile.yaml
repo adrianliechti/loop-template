@@ -1,0 +1,54 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  DOCKER_IMAGE: ghcr.io/adrianliechti/loop-template
+
+tasks:
+  push:
+    cmds:
+      - task: push-template
+        vars: { STACK: angular }
+      - task: push-template
+        vars: { STACK: aspnet }
+      - task: push-template
+        vars: { STACK: golang }
+      - task: push-template
+        vars: { STACK: nginx }
+      - task: push-template
+        vars: { STACK: python }
+      - task: push-template
+        vars: { STACK: react }
+      - task: push-template
+        vars: { STACK: spring }
+
+  run: 
+    cmds:
+      - rm -rf output/
+      - task: run-template
+        vars: { STACK: angular }
+      - task: run-template
+        vars: { STACK: aspnet }
+      - task: run-template
+        vars: { STACK: golang }
+      - task: run-template
+        vars: { STACK: nginx }
+      - task: run-template
+        vars: { STACK: python }
+      - task: run-template
+        vars: { STACK: react }
+      - task: run-template
+        vars: { STACK: spring }
+
+  push-template:
+    dir: "{{.STACK}}"
+    cmds:
+      - docker buildx build --push --platform linux/arm64,linux/amd64 --tag {{.DOCKER_IMAGE}}:{{.STACK}} .
+  
+  run-template:
+    cmds:
+      - rm -rf output/{{.STACK}} || true
+      - mkdir -p output/{{.STACK}}
+      - docker run --pull always -it --rm -v $(pwd)/output/{{.STACK}}:/src {{.DOCKER_IMAGE}}:{{.STACK}}
+      - docker build -t {{.STACK}}-demo output/{{.STACK}} -f output/{{.STACK}}/Dockerfile
